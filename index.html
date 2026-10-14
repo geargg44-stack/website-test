@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="halloween">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#09060f">
+    <title>Mio Client — The next generation DDNet client</title>
+    <meta name="description" content="Mio Client — клиент нового поколения для DDNet: ClickGUI, шейдеры, высокая производительность.">
+
+    <!-- Иконка сайта (Icon.png из репозитория) -->
+    <link rel="icon" type="image/png" href="Icon.png">
+    <link rel="shortcut icon" type="image/png" href="Icon.png">
+    <link rel="apple-touch-icon" href="Icon.png">
+    <meta property="og:title" content="Mio Client — The next generation DDNet client">
+    <meta property="og:description" content="Клиент нового поколения для DDNet.">
+    <meta property="og:image" content="https://geargg44-stack.github.io/Mio-Client-Website/Icon.png">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Creepster&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@11.2.4/dist/framer-motion.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mio-bg': 'rgb(var(--bg) / <alpha-value>)',
+                        'mio-card': 'rgb(var(--card) / <alpha-value>)',
+                        'mio-border': 'rgba(255,255,255,0.08)',
+                        'mio-primary': 'rgb(var(--p) / <alpha-value>)',
+                        'mio-secondary': 'rgb(var(--s) / <alpha-value>)',
+                        'mio-green': 'rgb(var(--g) / <alpha-value>)',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    animation: {
+                        'blob': 'blob 12s infinite cubic-bezier(0.4, 0, 0.2, 1)',
+                        'float-slow': 'float 8s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                            '33%': { transform: 'translate(40px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-30px, 30px) scale(0.9)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                },
+            }
+        }
+    </script>
+
+    <style>
+        /* ---------- Темы ---------- */
+        :root, [data-theme="halloween"] {
+            --p: 255 122 26;
+            --s: 157 78 255;
+            --g: 132 255 90;
+            --bg: 9 6 15;
+            --card: 21 15 28;
+        }
+        [data-theme="classic"] {
+            --p: 180 125 255;
+            --s: 255 77 136;
+            --g: 132 255 90;
+            --bg: 11 13 18;
+            --card: 21 24 33;
+        }
+
+        html { scroll-behavior: smooth; }
+        body { background-color: rgb(var(--bg)); overflow-x: hidden; transition: background-color .6s ease; }
+        ::selection { background: rgb(var(--p) / .45); color: #fff; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgb(var(--bg)); }
+        ::-webkit-scrollbar-thumb { background: rgb(var(--p) / .35); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgb(var(--p) / .7); }
+
+        a:focus-visible, button:focus-visible { outline: 2px solid rgb(var(--p)); outline-offset: 3px; }
+
+        .cv { content-visibility: auto; contain-intrinsic-size: 1px 900px; }
+
+        .interactive-text { transition: all 0.3s ease; display: inline-block; }
+        .interactive-text:hover { transform: scale(1.02); filter: drop-shadow(0 0 22px rgb(var(--p) / .55)); cursor: default; }
+
+        .platform-link { transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; color: #6b7280; }
+        .platform-link:hover { color: #ffffff; transform: scale(1.1); }
+        .platform-link.active { color: rgb(var(--p)); }
+
+        .lang-btn { transition: all 0.3s ease; }
+
+        .glass { background: rgba(255,255,255,.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.07); }
+        .glass-hover { transition: all .3s ease; }
+        .glass-hover:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+        .glass-lite { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); }
+
+        /* Кнопка Premium: без transform на hover, чтобы не ломался порядок слоёв */
+        .btn-premium {
+            background: linear-gradient(to right, rgb(var(--p)), rgb(var(--s)));
+            box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 10px 30px -10px rgb(var(--p) / .55), inset 0 1px 0 rgba(255,255,255,.2);
+            transition: box-shadow .3s ease, filter .3s ease;
+        }
+        .btn-premium:hover {
+            box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 15px 40px -10px rgb(var(--p) / .75), inset 0 1px 0 rgba(255,255,255,.3);
+            filter: brightness(1.1);
+        }
+
+        .glow-primary { transition: all .3s ease; }
+        .glow-primary:hover { box-shadow: 0 0 45px rgb(var(--p) / .5); }
+        .glow-primary-lg { transition: all .3s ease; }
+        .glow-primary-lg:hover { box-shadow: 0 0 70px rgb(var(--p) / .65); }
+        .text-grad { background-image: linear-gradient(90deg, rgb(var(--p)), rgb(var(--s))); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+        /* ---------- Заголовок ---------- */
+        [data-theme="halloween"] .font-spooky {
+            font-family: 'Creepster', 'Inter', cursive;
+            font-weight: 400;
+            letter-spacing: .03em;
+        }
+        .flicker { animation: flicker 5s infinite; }
+        @keyframes flicker {
+            0%, 18%, 22%, 24%, 52%, 56%, 100% { opacity: 1; filter: drop-shadow(0 0 22px rgb(var(--p) / .55)); }
+            20%, 23%, 54% { opacity: .55; filter: drop-shadow(0 0 4px rgb(var(--p) / .2)); }
+        }
+
+        /* ---------- Туман ---------- */
+        .fog {
+            position: fixed; left: 0; bottom: 0; width: 200%; height: 38vh; pointer-events: none; z-index: 1;
+            background:
+                radial-gradient(ellipse 30% 60% at 10% 80%, rgb(var(--s) / .16), transparent 70%),
+                radial-gradient(ellipse 25% 50% at 38% 90%, rgb(var(--p) / .10), transparent 70%),
+                radial-gradient(ellipse 30% 60% at 65% 85%, rgb(var(--s) / .14), transparent 70%),
+                radial-gradient(ellipse 25% 50% at 90% 90%, rgb(var(--p) / .10), transparent 70%);
+            animation: drift 45s linear infinite;
+            filter: blur(18px);
+            will-change: transform;
+        }
+        .fog.two { height: 28vh; opacity: .8; animation-duration: 70s; animation-direction: reverse; }
+        @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .vignette {
+            position: fixed; inset: 0; pointer-events: none; z-index: 2;
+            background: radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / .55) 100%);
+        }
+
+        /* ---------- Летучие мыши ---------- */
+        .bat-flap { animation: flap .32s ease-in-out infinite alternate; transform-origin: center; }
+        @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.45); } }
+
+        /* ---------- Паук ---------- */
+        .spider {
+            position: absolute; top: 0; z-index: 6; display: flex; flex-direction: column; align-items: center;
+            animation: dangle 7s ease-in-out infinite;
+        }
+        .spider .thread { width: 1px; height: 22vh; background: linear-gradient(rgba(255,255,255,.05), rgba(255,255,255,.4)); }
+        .spider i { color: #1a1224; font-size: 1.6rem; filter: drop-shadow(0 0 6px rgb(var(--s) / .6)); margin-top: -2px; }
+        @keyframes dangle { 0%, 100% { transform: translateY(-9vh); } 50% { transform: translateY(6vh); } }
+
+        /* ---------- Луна ---------- */
+        .moon {
+            width: 150px; height: 150px; border-radius: 50%;
+            background:
+                radial-gradient(circle at 30% 35%, rgba(0,0,0,.12) 0 9%, transparent 10%),
+                radial-gradient(circle at 62% 28%, rgba(0,0,0,.10) 0 6%, transparent 7%),
+                radial-gradient(circle at 55% 66%, rgba(0,0,0,.12) 0 11%, transparent 12%),
+                radial-gradient(circle at 35% 30%, #fff1d6, #ffc98a 70%, #e8923a);
+            box-shadow: 0 0 60px rgb(var(--p) / .45), 0 0 160px rgb(var(--p) / .25);
+        }
+
+        /* ---------- Тыквы ---------- */
+        .pumpkin-glow { filter: drop-shadow(0 0 14px rgb(var(--p) / .8)); animation: bob 4s ease-in-out infinite; display: inline-block; }
+        @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+        .pumpkin-pulse { animation: pulse 2.6s ease-in-out infinite; display: inline-block; }
+        @keyframes pulse { 0%, 100% { filter: drop-shadow(0 0 6px rgb(var(--p) / .4)); } 50% { filter: drop-shadow(0 0 20px rgb(var(--p) / .95)); } }
+
+        /* ---------- Команда ---------- */
+        .team-card {
+            position: relative; overflow: hidden; text-align: center;
+            background: rgb(var(--card) / .85);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 1.25rem; padding: 2.25rem 2rem;
+            transition: transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s ease, box-shadow .3s ease;
+        }
+        .team-card:hover { transform: translate3d(0,-6px,0); border-color: rgb(var(--p) / .5); box-shadow: 0 18px 40px -18px rgb(var(--p) / .45); }
+        .team-avatar {
+            width: 88px; height: 88px; border-radius: 9999px; margin: 0 auto 1.25rem;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.75rem; color: #fff; letter-spacing: .02em;
+            background: linear-gradient(135deg, rgb(var(--p)), rgb(var(--s)));
+            box-shadow: 0 0 0 4px rgb(var(--p) / .15), 0 10px 30px -8px rgb(var(--p) / .6);
+        }
+        .role-chip {
+            display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 9999px;
+            font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+            color: rgb(var(--p)); background: rgb(var(--p) / .1); border: 1px solid rgb(var(--p) / .35);
+        }
+
+        /* ---------- Changelog ---------- */
+        .cl-line { position: absolute; left: 19px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(rgb(var(--p) / .6), rgb(var(--s) / .15)); }
+        .cl-dot { position: absolute; left: 10px; top: 28px; width: 20px; height: 20px; border-radius: 9999px; background: rgb(var(--bg)); border: 3px solid rgb(var(--p)); box-shadow: 0 0 14px rgb(var(--p) / .7); }
+        .cl-badge { font-size: .65rem; font-weight: 800; letter-spacing: .08em; padding: 3px 10px; border-radius: 9999px; background: rgb(var(--g) / .15); color: rgb(var(--g)); border: 1px solid rgb(var(--g) / .4); }
+
+        .gallery-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--p) / .4) transparent; }
+
+        /* ---------- Курсорный свет ---------- */
+        .cursor-glow {
+            position: fixed; top: 0; left: 0; width: 520px; height: 520px; pointer-events: none; z-index: 3; border-radius: 50%;
+            background: radial-gradient(circle, rgb(var(--p) / .13), transparent 65%);
+            mix-blend-mode: screen;
+            will-change: transform;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const SUPABASE_URL = "https://jllxmrifjflruvllfjst.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3JkCxHkGAZvmFbY4YeYRaA_0N_-kaZl";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const { motion, AnimatePresence, useInView, useMotionValue, useSpring, useTransform } = Motion;
+
+        // Облегчённый режим: только слабые устройства / телефоны
+        const LITE = (() => {
+            try {
+                return (navigator.hardwareConcurrency || 8) <= 4 ||
+                    window.matchMedia('(pointer: coarse)').matches ||
+                    window.matchMedia('(max-width: 768px)').matches;
+            } catch (e) { return false; }
+        })();
+
+        const THEME_COLORS = {
+            halloween: { p: '255,122,26', s: '157,78,255' },
+            classic: { p: '180,125,255', s: '255,77,136' },
+        };
+
+        const plural = (n, a, b, c) => {
+            const m = n % 10, k = n % 100;
+            if (k > 10 && k < 20) return c;
+            if (m === 1) return a;
+            if (m > 1 && m < 5) return b;
+            return c;
+        };
+
+        const translations = {
+            RU: {
+                nav_features: "Возможности",
+                nav_performance: "Производительность",
+                nav_gallery: "Галерея",
+                nav_changelog: "Changelog",
+                nav_team: "Команда",
+                nav_faq: "FAQ",
+                nav_download: "Скачать",
+                hero_version: "ВЕРСИЯ 1.0.0 ОФИЦИАЛЬНО ВЫПУЩЕНА",
+                hero_version_h: "ХЭЛЛОУИНСКОЕ ИЗДАНИЕ • ВЕРСИЯ 1.0.0",
+                countdown: (n) => `До Хэллоуина ${n} ${plural(n, 'день', 'дня', 'дней')}`,
+                countdown_today: "Сегодня Хэллоуин — угощайся!",
+                hero_subtitle: "Клиент нового поколения для DDNet.",
+                hero_desc: "Испытайте непревзойденную производительность, потрясающую визуализацию и тщательно продуманный интерфейс, созданный для будущего.",
+                btn_download: "Скачать сейчас",
+                btn_support: "Поддержать",
+                features_tag: "Возможности",
+                features_title: "Создан для совершенства.",
+                gallery_tag: "Галерея",
+                gallery_title: "Визуальный шедевр.",
+                changelog_tag: "Обновления",
+                changelog_title: "Changelog.",
+                changelog_desc: "Что нового в Mio Client: визуалы, функции и шейдеры.",
+                cl_visuals: "Новые визуалы",
+                cl_features: "Новые функции",
+                cl_shaders: "Новые шейдеры",
+                cl_fixes: "Исправления",
+                team_tag: "Команда",
+                team_title: "Люди за Mio.",
+                team_desc: "Небольшая команда, которая делает клиент каждый день.",
+                faq_tag: "Помощь",
+                faq_title: "Часто задаваемые вопросы",
+                faq_q1: "Безопасно ли использовать Mio Client?",
+                faq_a1: "Да, абсолютно безопасно. Мы не собираем ваши данные.",
+                faq_q2: "Какие системные требования у клиента?",
+                faq_a2: "Mio Client невероятно легковесен и оптимизирован. Он без проблем запускается на Windows 7 и современных дистрибутивах Linux. Для игры достаточно 2 ГБ оперативной памяти и любого процессора последних 10 лет.",
+                faq_q3: "Как устанавливать и обновлять клиент?",
+                faq_a3: "Просто скачайте архив для вашей операционной системы, распакуйте его в любую папку и запустите исполняемый файл. Обновления выходят автоматически или проверяются при запуске.",
+                faq_q4: "Будут ли добавлены новые функции?",
+                faq_a4: "Конечно! Мы активно работаем над клиентом и прислушиваемся к сообществу. Вы можете предложить свои идеи в нашем Discord-сервере.",
+                perf_tag: "Производительность",
+                perf_title: "Несравненная эффективность.",
+                perf_desc: "Создан с нуля, чтобы ваша игра работала плавнее, чем когда-либо.",
+                stat1_label: "Кадров в секунду",
+                stat1_desc: "Невероятно плавный рендеринг",
+                stat2_label: "Платформы",
+                stat2_desc: "Windows и Linux",
+                stat3_label: "Скорость запуска",
+                stat3_desc: "Мгновенный запуск",
+                download_title: "Готовы играть?",
+                download_desc: "Скачайте Mio Client сегодня и поднимите свой игровой опыт на новый уровень.",
+                download_desc_h: "Скачайте Mio Client сегодня — никаких подвохов, только угощение.",
+                download_for: "Скачать для",
+                download_wrong: "Не та ОС? Выберите вашу платформу:",
+                download_latest: "Последняя версия: 1.0.0",
+                modal_free_title: "Free Plan",
+                modal_free_price: "0 ₽",
+                modal_free_f1: "Базовая версия",
+                modal_free_f2: "Стандартная оптимизация",
+                modal_free_f3: "Базовые модули",
+                modal_free_btn: "Скачать",
+                modal_premium_title: "Premium",
+                modal_premium_price: "50 ₽",
+                modal_premium_sub: "/мес",
+                modal_premium_f1: "Все возможности Free",
+                modal_premium_f2: "Новые функции раньше всех",
+                modal_premium_f3: "Полное отсутствие рекламы",
+                modal_premium_f4: "Эксклюзивная косметика",
+                modal_premium_btn: "Купить Premium",
+                modal_premium_out: "К сожалению, Premium-версия пока нет в наличии.",
+                modal_android_msg: "Для Android версии пока нет, но возможно будет в будущем!",
+                modal_mac_msg: "Для macOS версии пока нет, но возможно будет в будущем!",
+                footer_copy: "© 2026 Mio Client. Все права защищены.",
+                footer_h: "Trick or treat? Скачай клиент — получишь угощение.",
+                theme_h: "Хэллоуин",
+                theme_c: "Обычная тема",
+                feat: [
+                    { icon: "fa-solid fa-wand-magic-sparkles", title: 'ClickGUI', desc: 'Красиво оформленный, интуитивно понятный интерфейс, позволяющий перемещаться по модулям и настройкам без труда.' },
+                    { icon: "fa-solid fa-bolt", title: 'Визуальные эффекты', desc: 'Расширьте границы игрового движка с помощью потрясающих, настраиваемых визуальных эффектов.' },
+                    { icon: "fa-solid fa-palette", title: 'Кастомизация', desc: 'Настройте каждый аспект клиента. От тем до биндов, сделайте Mio по-настоящему вашим до пикселя.' },
+                    { icon: "fa-solid fa-fire", title: 'Производительность', desc: 'Высокооптимизированная кодовая база, обеспечивающая максимальный FPS и минимальное потребление памяти даже на старых ПК.' },
+                    { icon: "fa-solid fa-gear", title: 'Современный UI', desc: 'Создан с использованием футуристического дизайна, предлагающий элегантный, стеклянный интерфейс.' },
+                    { icon: "fa-solid fa-users", title: 'Сообщество', desc: 'Живое комьюнити игроков в Discord: делитесь настройками, предлагайте идеи и получайте помощь от других.' }
+                ],
+                team: [
+                    { name: 'Sam Porter', initials: 'SP', icon: 'fa-crown', role: 'Основатель • Главный кодер', desc: 'Создатель Mio Client. Главный кодер проекта: отвечает за архитектуру клиента, ядро, функции и общее развитие.' },
+                    { name: 'ВиниПух', initials: 'ВП', icon: 'fa-code', role: 'Кодер • Шейдеры • Визуал', desc: 'Кодер Mio Client. Пишет код и исправляет баги, а ещё делает все шейдеры и визуальную часть клиента.' }
+                ],
+                changelog: [
+                    {
+                        v: '1.1.0', date: 'Октябрь 2026', badge: 'NEW',
+                        visuals: [
+                            'Новое стартовое меню: кнопки без фона, выровнены по правому краю, с плавной анимацией появления.',
+                            'Обновлённый ClickGUI: стеклянные панели, более мягкие скругления и аккуратные тени.',
+                            'Плавные анимации открытия, закрытия и переключения вкладок.',
+                            'Новая палитра акцентных цветов и обновлённые иконки модулей.'
+                        ],
+                        features: [
+                            'Поиск по модулям прямо в ClickGUI.',
+                            'Профили настроек: сохраняйте и переключайте конфиги в один клик.',
+                            'Расширенные бинды: режимы toggle и hold.',
+                            'Оптимизирован рендеринг интерфейса — меньше нагрузка на CPU и выше FPS.'
+                        ],
+                        shaders: [
+                            'Liquid Glass — шейдер «жидкого стекла» на OpenGL для ClickGUI: преломление фона и мягкий блик по краям.',
+                            'Переписанное размытие фона: без артефактов на границах панелей и без мерцания.',
+                            'Шейдер свечения (glow) для активных модулей и ползунков.',
+                            'Лёгкая хроматическая аберрация на краях стеклянных панелей.'
+                        ],
+                        fixes: [
+                            'Исправлено некорректное отображение размытия в ClickGUI.'
+                        ]
+                    },
+                    {
+                        v: '1.0.0', date: 'Первый релиз',
+                        visuals: ['Первый публичный релиз с ClickGUI и современным стеклянным интерфейсом.'],
+                        features: ['Базовый набор модулей, кастомизация тем и биндов.', 'Поддержка Windows и Linux.'],
+                        shaders: [], fixes: []
+                    }
+                ]
+            },
+            EN: {
+                nav_features: "Features",
+                nav_performance: "Performance",
+                nav_gallery: "Gallery",
+                nav_changelog: "Changelog",
+                nav_team: "Team",
+                nav_faq: "FAQ",
+                nav_download: "Download",
+                hero_version: "VERSION 1.0.0 OFFICIALLY RELEASED",
+                hero_version_h: "HALLOWEEN EDITION • VERSION 1.0.0",
+                countdown: (n) => `${n} ${n === 1 ? 'day' : 'days'} until Halloween`,
+                countdown_today: "It's Halloween — treat yourself!",
+                hero_subtitle: "The next generation DDNet client.",
+                hero_desc: "Experience unparalleled performance, stunning visuals, and a meticulously crafted interface designed for the future.",
+                btn_download: "Download Now",
+                btn_support: "Support",
+                features_tag: "Features",
+                features_title: "Built for perfection.",
+                gallery_tag: "Gallery",
+                gallery_title: "A visual masterpiece.",
+                changelog_tag: "Updates",
+                changelog_title: "Changelog.",
+                changelog_desc: "What's new in Mio Client: visuals, features and shaders.",
+                cl_visuals: "New visuals",
+                cl_features: "New features",
+                cl_shaders: "New shaders",
+                cl_fixes: "Fixes",
+                team_tag: "Team",
+                team_title: "The people behind Mio.",
+                team_desc: "A small team building the client every day.",
+                faq_tag: "Help",
+                faq_title: "Frequently Asked Questions",
+                faq_q1: "Is it safe to use Mio Client?",
+                faq_a1: "Yes, it is absolutely safe. We do not collect your data.",
+                faq_q2: "What are the system requirements?",
+                faq_a2: "Mio Client is incredibly lightweight and optimized. It runs smoothly on Windows 7 and modern Linux distributions. You only need 2GB of RAM and any CPU from the last 10 years to play.",
+                faq_q3: "How to install and update the client?",
+                faq_a3: "Just download the archive for your OS, extract it to any folder, and run the executable file. Updates are released automatically or checked at startup.",
+                faq_q4: "Will new features be added?",
+                faq_a4: "Of course! We are actively working on the client and listen to the community. You can suggest your ideas in our Discord server.",
+                perf_tag: "Performance",
+                perf_title: "Unrivaled efficiency.",
+                perf_desc: "Engineered from the ground up to ensure your game runs smoother than ever before.",
+                stat1_label: "Frames Per Second",
+                stat1_desc: "Buttery smooth rendering",
+                stat2_label: "Platforms",
+                stat2_desc: "Windows & Linux",
+                stat3_label: "Startup Speed",
+                stat3_desc: "Instantaneous launch",
+                download_title: "Ready to play?",
+                download_desc: "Download Mio Client today and elevate your gaming experience.",
+                download_desc_h: "Download Mio Client today — no tricks, just treats.",
+                download_for: "Download for",
+                download_wrong: "Wrong OS? Choose your platform:",
+                download_latest: "Latest Version: 1.0.0",
+                modal_free_title: "Free Plan",
+                modal_free_price: "0 ₽",
+                modal_free_f1: "Base version",
+                modal_free_f2: "Standard optimization",
+                modal_free_f3: "Basic modules",
+                modal_free_btn: "Download",
+                modal_premium_title: "Premium",
+                modal_premium_price: "50 ₽",
+                modal_premium_sub: "/mo",
+                modal_premium_f1: "All Free features",
+                modal_premium_f2: "Early access to new features",
+                modal_premium_f3: "Completely ad-free",
+                modal_premium_f4: "Exclusive cosmetics",
+                modal_premium_btn: "Buy Premium",
+                modal_premium_out: "Unfortunately, the Premium version is out of stock.",
+                modal_android_msg: "The Android version is not available yet, but might be in the future!",
+                modal_mac_msg: "The macOS version is not available yet, but might be in the future!",
+                footer_copy: "© 2026 Mio Client. All rights reserved.",
+                footer_h: "Trick or treat? Grab the client — get the treat.",
+                theme_h: "Halloween",
+                theme_c: "Classic theme",
+                feat: [
+                    { icon: "fa-solid fa-wand-magic-sparkles", title: 'ClickGUI', desc: 'A beautifully designed, intuitive interface that allows you to navigate modules and settings with zero friction.' },
+                    { icon: "fa-solid fa-bolt", title: 'Visual Effects', desc: 'Push the limits of the game engine with stunning, customizable visual enhancements and effects.' },
+                    { icon: "fa-solid fa-palette", title: 'Customization', desc: 'Tailor every aspect of the client. From themes to keybinds, make Mio truly yours down to the pixel.' },
+                    { icon: "fa-solid fa-fire", title: 'Performance', desc: 'Highly optimized codebase ensuring maximum FPS and minimal memory footprint, even on older machines.' },
+                    { icon: "fa-solid fa-gear", title: 'Modern UI', desc: 'Built with a futuristic design language, offering a sleek, glassmorphic experience that feels premium.' },
+                    { icon: "fa-solid fa-users", title: 'Community', desc: 'A living player community on Discord: share your configs, suggest ideas, and get help from other players.' }
+                ],
+                team: [
+                    { name: 'Sam Porter', initials: 'SP', icon: 'fa-crown', role: 'Founder • Lead Coder', desc: 'Creator of Mio Client. Lead coder of the project: in charge of the client architecture, core, features and overall direction.' },
+                    { name: 'ВиниПух', initials: 'ВП', icon: 'fa-code', role: 'Coder • Shaders • Visuals', desc: 'Mio Client coder. Writes code and fixes bugs, and also makes all the shaders and the visual side of the client.' }
+                ],
+                changelog: [
+                    {
+                        v: '1.1.0', date: 'October 2026', badge: 'NEW',
+                        visuals: [
+                            'New start menu: background-free buttons aligned to the right with a smooth entrance animation.',
+                            'Reworked ClickGUI: glass panels, softer corners and cleaner shadows.',
+                            'Smooth animations for opening, closing and switching tabs.',
+                            'New accent color palette and refreshed module icons.'
+                        ],
+                        features: [
+                            'Module search right inside the ClickGUI.',
+                            'Config profiles: save and switch setups in one click.',
+                            'Advanced keybinds: toggle and hold modes.',
+                            'Optimized UI rendering — lower CPU load and higher FPS.'
+                        ],
+                        shaders: [
+                            'Liquid Glass — an OpenGL "liquid glass" shader for the ClickGUI: background refraction and a soft edge highlight.',
+                            'Rewritten background blur: no artifacts on panel edges and no flickering.',
+                            'Glow shader for active modules and sliders.',
+                            'Subtle chromatic aberration on the edges of glass panels.'
+                        ],
+                        fixes: [
+                            'Fixed incorrect blur rendering in the ClickGUI.'
+                        ]
+                    },
+                    {
+                        v: '1.0.0', date: 'First release',
+                        visuals: ['First public release with ClickGUI and a modern glass interface.'],
+                        features: ['Core module set, theme and keybind customization.', 'Windows and Linux support.'],
+                        shaders: [], fixes: []
+                    }
+                ]
+            }
+        };
+
+        const RELEASES_REPO = 'geargg44-stack/Mio-Client-Website';
+
+        const RELEASE_TITLES = {
+            Windows: 'Mio Client v1.0.0',
+            Linux:   'Mio Client linux v1.0.0',
+        };
+
+        const ASSET_MATCH = {
+            Windows: /\.(zip|exe|msi)$/i,
+            Linux:   /\.(zip|tar\.gz|tgz|AppImage|deb)$/i,
+        };
+
+        // Платформы, для которых версии пока нет
+        const UNAVAILABLE_OS = ['Android', 'macOS'];
+
+        const STATIC_DOWNLOADS = {
+            macOS: '#',
+            Android: '#',
+        };
+
+        const RELEASES_PAGE = `https://github.com/${RELEASES_REPO}/releases`;
+
+        const useReleases = () => {
+            const [links, setLinks] = useState({});
+
+            useEffect(() => {
+                let cancelled = false;
+                (async () => {
+                    try {
+                        const res = await fetch(`https://api.github.com/repos/${RELEASES_REPO}/releases?per_page=100`, {
+                            headers: { Accept: 'application/vnd.github+json' },
+                        });
+                        if (!res.ok) throw new Error(res.status);
+                        const releases = await res.json();
+
+                        const out = {};
+                        for (const os of Object.keys(RELEASE_TITLES)) {
+                            const wanted = RELEASE_TITLES[os].trim().toLowerCase();
+                            const rel = releases.find(
+                                (r) => !r.draft && (r.name || '').trim().toLowerCase() === wanted
+                            );
+                            if (!rel) continue;
+                            const asset = rel.assets.find((a) => ASSET_MATCH[os].test(a.name)) || rel.assets[0];
+                            if (asset) out[os] = { url: asset.browser_download_url, size: asset.size };
+                        }
+                        if (!cancelled) setLinks(out);
+                    } catch (e) {
+                        console.warn('Не удалось загрузить релизы:', e);
+                    }
+                })();
+                return () => { cancelled = true; };
+            }, []);
+
+            return { links };
+        };
+
+        /* ---------- Декор ---------- */
+
+        // Светящиеся частицы (как во втором варианте), пауза на скрытой вкладке
+        const Embers = ({ theme }) => {
+            const ref = useRef(null);
+            useEffect(() => {
+                const c = ref.current; const ctx = c.getContext('2d');
+                let w, h, raf, running = true;
+                const resize = () => { w = c.width = window.innerWidth; h = c.height = window.innerHeight; };
+                resize();
+                window.addEventListener('resize', resize);
+                const col = THEME_COLORS[theme];
+                const spawn = (init) => ({
+                    x: Math.random() * w, y: init ? Math.random() * h : h + 10,
+                    r: Math.random() * 2.2 + 0.5, vy: 0.3 + Math.random() * 0.9, vx: (Math.random() - 0.5) * 0.3,
+                    ph: Math.random() * 6.28, a: 0.3 + Math.random() * 0.7,
+                    c: Math.random() > 0.25 ? col.p : col.s,
+                });
+                const ps = Array.from({ length: LITE ? 30 : 70 }, () => spawn(true));
+                const draw = () => {
+                    if (!running) return;
+                    ctx.clearRect(0, 0, w, h);
+                    for (let i = 0; i < ps.length; i++) {
+                        const p = ps[i];
+                        p.y -= p.vy; p.ph += 0.02; p.x += p.vx + Math.sin(p.ph) * 0.4;
+                        if (p.y < -10) { ps[i] = spawn(false); continue; }
+                        const alpha = p.a * Math.min(1, (p.y / h) * 1.6 + 0.2);
+                        ctx.beginPath();
+                        ctx.shadowBlur = 12; ctx.shadowColor = `rgba(${p.c},.9)`;
+                        ctx.fillStyle = `rgba(${p.c},${alpha})`;
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    raf = requestAnimationFrame(draw);
+                };
+                const onVis = () => {
+                    if (document.hidden) { running = false; cancelAnimationFrame(raf); }
+                    else if (!running) { running = true; draw(); }
+                };
+                document.addEventListener('visibilitychange', onVis);
+                draw();
+                return () => {
+                    running = false; cancelAnimationFrame(raf);
+                    window.removeEventListener('resize', resize);
+                    document.removeEventListener('visibilitychange', onVis);
+                };
+            }, [theme]);
+            return <canvas ref={ref} className="fixed inset-0 pointer-events-none z-[1]" />;
+        };
+
+        const BatSvg = ({ size, flip }) => (
+            <span style={{ display: 'inline-block', transform: flip ? 'scaleX(-1)' : 'none' }}>
+                <svg className="bat-flap" width={size} height={size / 2} viewBox="0 0 64 32" fill="#0d0814" style={{ filter: 'drop-shadow(0 0 4px rgba(157,78,255,.55))' }}>
+                    <path d="M32 10 C28 4 20 2 2 6 C9 10 9 16 13 21 C17 16 22 16 26 21 C28 16 30 14 32 19 C34 14 36 16 38 21 C42 16 47 16 51 21 C55 16 55 10 62 6 C44 2 36 4 32 10 Z" />
+                    <path d="M28 9 L29 3 L32 8 L35 3 L36 9 Z" />
+                </svg>
+            </span>
+        );
+
+        // 7 летучих мышей с извилистым полётом (framer-motion)
+        const Bats = () => {
+            const bats = useMemo(() => Array.from({ length: LITE ? 3 : 7 }, (_, i) => ({
+                id: i,
+                size: 26 + Math.random() * 34,
+                top: 6 + Math.random() * 62,
+                dur: 16 + Math.random() * 18,
+                delay: Math.random() * 14,
+                amp: 20 + Math.random() * 60,
+                dir: Math.random() > 0.5 ? 1 : -1,
+            })), []);
+            return (
+                <div className="fixed inset-0 pointer-events-none z-[5] overflow-hidden">
+                    {bats.map((b) => (
+                        <motion.div
+                            key={b.id}
+                            className="absolute"
+                            style={{ top: `${b.top}%`, left: 0 }}
+                            initial={{ x: b.dir > 0 ? '-12vw' : '112vw' }}
+                            animate={{ x: b.dir > 0 ? '112vw' : '-12vw', y: [0, -b.amp, b.amp / 2, -b.amp / 3, 0] }}
+                            transition={{
+                                x: { duration: b.dur, repeat: Infinity, delay: b.delay, ease: 'linear' },
+                                y: { duration: b.dur / 3, repeat: Infinity, ease: 'easeInOut' },
+                            }}
+                        >
+                            <BatSvg size={b.size} flip={b.dir < 0} />
+                        </motion.div>
+                    ))}
+                </div>
+            );
+        };
+
+        const Cobweb = ({ className = '', style }) => (
+            <svg className={className} style={style} width="220" height="220" viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="1">
+                <path d="M0 0 L200 0 M0 0 L185 70 M0 0 L150 150 M0 0 L70 185 M0 0 L0 200" />
+                <path d="M0 40 Q22 44 40 0" />
+                <path d="M0 80 Q40 84 78 0" />
+                <path d="M0 120 Q58 112 110 0 " />
+                <path d="M0 165 Q80 140 150 0" />
+                <path d="M0 200 Q110 160 200 0" />
+            </svg>
+        );
+
+        const Graveyard = () => (
+            <svg viewBox="0 0 1200 130" preserveAspectRatio="none" className="w-full h-24 md:h-32 block" style={{ fill: 'rgb(var(--card))' }}>
+                <path d="M0 130 V96 Q150 74 300 94 T600 92 T900 96 T1200 84 V130Z" />
+                <path d="M70 100 v-38 a18 18 0 0 1 36 0 v38z" />
+                <path d="M130 98 v-26 a12 12 0 0 1 24 0 v26z" />
+                <path d="M410 96 v-30 a15 15 0 0 1 30 0 v30z" />
+                <path d="M820 96 v-40 a19 19 0 0 1 38 0 v40z" />
+                <path d="M1010 92 v-28 a13 13 0 0 1 26 0 v28z" />
+                <path d="M1060 94 h6 v-34 h-6 z M1050 70 h26 v6 h-26z" />
+                <path d="M610 94 C612 60 600 50 588 30 M604 66 C616 56 628 52 640 40 M600 50 C592 44 584 44 574 34" stroke="rgb(var(--card))" strokeWidth="5" fill="none" strokeLinecap="round" />
+            </svg>
+        );
+
+        /* ---------- Компоненты ---------- */
+
+        const Counter = ({ value, suffix = '', decimals = 0 }) => {
+            const ref = useRef(null);
+            const isInView = useInView(ref, { once: true });
+            const [displayValue, setDisplayValue] = useState((0).toFixed(decimals));
+            useEffect(() => {
+                if (!isInView) return;
+                const duration = 1800; const start = performance.now();
+                let raf;
+                const animate = (now) => {
+                    const progress = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    setDisplayValue((eased * value).toFixed(decimals));
+                    if (progress < 1) raf = requestAnimationFrame(animate);
+                };
+                raf = requestAnimationFrame(animate);
+                return () => cancelAnimationFrame(raf);
+            }, [isInView, value, decimals]);
+            return <span ref={ref}>{displayValue}{suffix}</span>;
+        };
+
+        const SectionHead = ({ tag, title, desc, halloween }) => (
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-16">
+                <p className="text-mio-primary font-medium mb-4 tracking-wide uppercase text-sm inline-flex items-center gap-3">
+                    {halloween && <i className="fa-solid fa-ghost text-xs opacity-80"></i>}
+                    {tag}
+                    {halloween && <i className="fa-solid fa-ghost text-xs opacity-80"></i>}
+                </p>
+                <h2 className="text-4xl md:text-6xl font-bold tracking-tight interactive-text block">{title}</h2>
+                {desc && <p className="text-gray-500 max-w-2xl mx-auto mt-4 font-light text-lg">{desc}</p>}
+            </motion.div>
+        );
+
+        // Карточка с 3D-наклоном и свечением (из второго варианта)
+        const FeatureCard = ({ icon, title, desc, index, halloween }) => {
+            const ref = useRef(null);
+            const mouseX = useMotionValue(0); const mouseY = useMotionValue(0);
+            const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], ['7deg', '-7deg']), { stiffness: 150, damping: 20 });
+            const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], ['-7deg', '7deg']), { stiffness: 150, damping: 20 });
+            const handleMouseMove = (e) => {
+                if (LITE) return;
+                const rect = ref.current.getBoundingClientRect();
+                mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
+                mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
+            };
+            const handleMouseLeave = () => { mouseX.set(0); mouseY.set(0); };
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.6, delay: (index % 3) * 0.1 }}
+                    ref={ref} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
+                    style={LITE ? undefined : { rotateX, rotateY, transformStyle: 'preserve-3d' }}
+                    className="group relative bg-mio-card/90 border border-mio-border rounded-2xl p-8 transition-colors duration-300 hover:border-mio-primary/50 overflow-hidden"
+                >
+                    <div className="absolute -inset-px bg-gradient-to-r from-mio-primary to-mio-secondary rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500 -z-10"></div>
+                    {halloween && <Cobweb className="absolute top-0 right-0 opacity-40 group-hover:opacity-80 transition-opacity pointer-events-none" style={{ transform: 'scaleX(-1)', width: 110, height: 110 }} />}
+                    <div className="mb-5 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-mio-primary/25 to-mio-secondary/20 border border-mio-border text-mio-primary text-2xl" style={{ transform: 'translateZ(40px)' }}><i className={icon}></i></div>
+                    <h3 className="text-xl font-semibold mb-2 text-white" style={{ transform: 'translateZ(30px)' }}>{title}</h3>
+                    <p className="text-gray-400 font-light leading-relaxed" style={{ transform: 'translateZ(20px)' }}>{desc}</p>
+                </motion.div>
+            );
+        };
+
+        const TeamCard = ({ member, index }) => (
+            <motion.div
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="team-card"
+            >
+                <div className="team-avatar">{member.initials}</div>
+                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">{member.name}</h3>
+                <span className="role-chip mb-4"><i className={`fa-solid ${member.icon}`}></i>{member.role}</span>
+                <p className="text-gray-400 font-light leading-relaxed mt-4">{member.desc}</p>
+            </motion.div>
+        );
+
+        const CL_GROUPS = [
+            { key: 'visuals', label: 'cl_visuals', icon: 'fa-eye' },
+            { key: 'features', label: 'cl_features', icon: 'fa-wand-magic-sparkles' },
+            { key: 'shaders', label: 'cl_shaders', icon: 'fa-cube' },
+            { key: 'fixes', label: 'cl_fixes', icon: 'fa-wrench' },
+        ];
+
+        const ChangelogEntry = ({ entry, t, index }) => (
+            <motion.div
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                className="relative pl-14 pb-10 last:pb-0"
+            >
+                <span className="cl-dot"></span>
+                <div className="bg-mio-card/80 backdrop-blur-sm border border-mio-border rounded-2xl p-6 md:p-8">
+                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                        <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-white">v{entry.v}</h3>
+                        {entry.badge && <span className="cl-badge">{entry.badge}</span>}
+                        <span className="text-sm text-gray-500 ml-auto">{entry.date}</span>
+                    </div>
+                    <div className="flex flex-col gap-6">
+                        {CL_GROUPS.filter((g) => entry[g.key] && entry[g.key].length).map((g) => (
+                            <div key={g.key}>
+                                <p className="flex items-center gap-2 text-sm font-semibold text-mio-primary uppercase tracking-wide mb-3">
+                                    <i className={`fa-solid ${g.icon} text-xs`}></i>{t[g.label]}
+                                </p>
+                                <ul className="flex flex-col gap-2">
+                                    {entry[g.key].map((item, i) => (
+                                        <li key={i} className="flex gap-3 text-gray-400 font-light leading-relaxed">
+                                            <i className="fa-solid fa-circle text-[5px] text-mio-secondary mt-[10px] flex-shrink-0"></i>
+                                            <span>{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </motion.div>
+        );
+
+        const GalleryItem = ({ item }) => {
+            const [failed, setFailed] = useState(false);
+            return (
+                <div className="relative flex-shrink-0 w-[90%] md:w-[700px] snap-center group">
+                    <div className="relative rounded-2xl overflow-hidden border border-mio-border bg-mio-card/60 backdrop-blur-sm h-[400px] transition-all duration-300 group-hover:border-mio-primary/60 group-hover:shadow-[0_0_50px_rgb(var(--p)/0.25)]">
+                        <div className="absolute inset-0 bg-gradient-to-br from-mio-primary/10 to-mio-secondary/10 z-10 pointer-events-none"></div>
+                        <div className="absolute inset-0 z-10 pointer-events-none" style={{ boxShadow: 'inset 0 0 80px rgba(0,0,0,.45)' }}></div>
+                        <div className="h-full w-full flex items-center justify-center relative overflow-hidden">
+                            {failed ? (
+                                <div className="text-center text-gray-600">
+                                    <i className="fa-solid fa-ghost text-5xl mb-3 text-mio-primary/50"></i>
+                                    <p className="text-sm">{item}.png</p>
+                                </div>
+                            ) : (
+                                <img src={`./${item}.png`} alt={`Mio Client Screenshot ${item}`} loading="lazy" decoding="async" onError={() => setFailed(true)} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const FaqItem = ({ question, answer, index, activeIndex, setActiveIndex, halloween }) => {
+            const isActive = activeIndex === index;
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.08 }}
+                    className={`glass bg-mio-card/60 rounded-xl overflow-hidden transition-all duration-300 ${isActive ? '!border-mio-primary/40 shadow-[0_0_35px_rgb(var(--p)/0.12)]' : 'glass-hover'}`}
+                >
+                    <button
+                        onClick={() => setActiveIndex(isActive ? null : index)}
+                        aria-expanded={isActive}
+                        className="w-full flex items-center justify-between gap-4 p-6 text-left"
+                    >
+                        <span className="flex items-center gap-4 pr-2">
+                            {halloween && <i className={`fa-solid ${isActive ? 'fa-ghost' : 'fa-skull'} text-mio-primary/70 text-sm transition-all`}></i>}
+                            <span className="text-lg font-medium text-gray-200 tracking-tight">{question}</span>
+                        </span>
+                        <motion.div animate={{ rotate: isActive ? 180 : 0 }} transition={{ duration: 0.3 }} className="flex-shrink-0">
+                            <i className="fa-solid fa-chevron-down text-mio-primary text-sm"></i>
+                        </motion.div>
+                    </button>
+                    <AnimatePresence initial={false}>
+                        {isActive && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                className="overflow-hidden"
+                            >
+                                <p className={`pb-6 pr-6 text-gray-400 font-light leading-relaxed text-[15px] ${halloween ? 'pl-[4.25rem]' : 'pl-6'}`}>{answer}</p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+            );
+        };
+
+        function App() {
+            const [scrolled, setScrolled] = useState(false);
+            const [userOS, setUserOS] = useState('Windows');
+            const [lang, setLang] = useState('EN');
+            const [showPricing, setShowPricing] = useState(false);
+            const [premiumSoldOut, setPremiumSoldOut] = useState(false);
+            const [showUnavailMsg, setShowUnavailMsg] = useState(false);
+            const [activeFaq, setActiveFaq] = useState(null);
+            const [authOpen, setAuthOpen] = useState(false);
+            const [authMode, setAuthMode] = useState('login');
+            const [authUser, setAuthUser] = useState(null);
+            const [authProfile, setAuthProfile] = useState(null);
+            const [authEmail, setAuthEmail] = useState('');
+            const [authPassword, setAuthPassword] = useState('');
+            const [authMessage, setAuthMessage] = useState('');
+            const [authBusy, setAuthBusy] = useState(false);
+            const [theme, setTheme] = useState(() => {
+                try { return localStorage.getItem('mio-theme') || 'halloween'; } catch (e) { return 'halloween'; }
+            });
+            const t = translations[lang];
+            const hw = theme === 'halloween';
+            const { links: releaseLinks } = useReleases();
+            const isUnavailable = UNAVAILABLE_OS.includes(userOS);
+            const getDownloadUrl = (os) => {
+                if (releaseLinks[os]) return releaseLinks[os].url;
+                if (STATIC_DOWNLOADS[os]) return STATIC_DOWNLOADS[os];
+                return RELEASES_PAGE;
+            };
+
+            const loadAuthProfile = async (userId) => {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('is_premium')
+                    .eq('id', userId)
+                    .maybeSingle();
+                if (error) {
+                    console.error('Mio profile lookup failed:', error.message);
+                    setAuthProfile(null);
+                    return;
+                }
+                setAuthProfile(data || { is_premium: false });
+            };
+
+            useEffect(() => {
+                let active = true;
+                supabaseClient.auth.getSession().then(({ data, error }) => {
+                    if (error) console.error('Mio auth session:', error.message);
+                    if (!active) return;
+                    const user = data?.session?.user || null;
+                    setAuthUser(user);
+                    if (user) loadAuthProfile(user.id);
+                });
+                const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+                    const user = session?.user || null;
+                    setAuthUser(user);
+                    if (_event === 'PASSWORD_RECOVERY') {
+                        setAuthMode('update');
+                        setAuthMessage('Введи новый пароль для аккаунта.');
+                        setAuthOpen(true);
+                    }
+                    if (user) {
+                        setTimeout(() => loadAuthProfile(user.id), 0);
+                    } else {
+                        setAuthProfile(null);
+                    }
+                });
+                return () => {
+                    active = false;
+                    subscription.unsubscribe();
+                };
+            }, []);
+
+            const submitAuth = async (event) => {
+                event.preventDefault();
+                setAuthBusy(true);
+                setAuthMessage('');
+                try {
+                    if (authMode === 'update') {
+                        const { error } = await supabaseClient.auth.updateUser({ password: authPassword });
+                        if (error) throw error;
+                        setAuthPassword('');
+                        setAuthMode('login');
+                        setAuthMessage('Пароль успешно изменён. Теперь можно войти с новым паролем.');
+                    } else if (authMode === 'signup') {
+                        const { data, error } = await supabaseClient.auth.signUp({
+                            email: authEmail.trim(),
+                            password: authPassword,
+                            options: { emailRedirectTo: window.location.origin + window.location.pathname }
+                        });
+                        if (error) throw error;
+                        setAuthMessage(data?.session
+                            ? 'Аккаунт создан. Вы вошли в систему.'
+                            : 'Письмо для подтверждения отправлено на почту. Проверь почту и перейди по ссылке.');
+                        if (data?.user && data?.session) {
+                            setAuthUser(data.user);
+                            await loadAuthProfile(data.user.id);
+                        }
+                    } else if (authMode === 'forgot') {
+                        const { error } = await supabaseClient.auth.resetPasswordForEmail(authEmail.trim(), {
+                            redirectTo: window.location.origin + window.location.pathname
+                        });
+                        if (error) throw error;
+                        setAuthMessage('Если адрес зарегистрирован, на него придёт письмо для сброса пароля.');
+                    } else {
+                        const { data, error } = await supabaseClient.auth.signInWithPassword({
+                            email: authEmail.trim(),
+                            password: authPassword
+                        });
+                        if (error) throw error;
+                        setAuthUser(data.user);
+                        await loadAuthProfile(data.user.id);
+                        setAuthMessage('Вход выполнен.');
+                    }
+                } catch (error) {
+                    setAuthMessage(error?.message || 'Не удалось выполнить запрос. Попробуй ещё раз.');
+                } finally {
+                    setAuthBusy(false);
+                }
+            };
+
+            const signOut = async () => {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) setAuthMessage(error.message);
+                else {
+                    setAuthUser(null);
+                    setAuthProfile(null);
+                    setAuthMessage('Ты вышел из аккаунта.');
+                    setAuthMode('login');
+                }
+            };
+
+            useEffect(() => {
+                document.documentElement.dataset.theme = theme;
+                try { localStorage.setItem('mio-theme', theme); } catch (e) {}
+            }, [theme]);
+
+            // дни до Хэллоуина
+            const daysLeft = useMemo(() => {
+                const now = new Date();
+                const target = new Date(now.getFullYear(), 9, 31, 23, 59, 59);
+                return Math.ceil((target - now) / 86400000);
+            }, []);
+
+            // Параллакс героя и свет за курсором
+            const heroX = useMotionValue(0); const heroY = useMotionValue(0);
+            const heroXSpring = useSpring(heroX, { stiffness: 50, damping: 20 }); const heroYSpring = useSpring(heroY, { stiffness: 50, damping: 20 });
+            const cursorX = useMotionValue(-600); const cursorY = useMotionValue(-600);
+            const cursorXS = useSpring(cursorX, { stiffness: 120, damping: 25 }); const cursorYS = useSpring(cursorY, { stiffness: 120, damping: 25 });
+            const rafMove = useRef(0);
+            const handleMouseMove = (e) => {
+                if (LITE || rafMove.current) return;
+                const cx = e.clientX, cy = e.clientY;
+                rafMove.current = requestAnimationFrame(() => {
+                    rafMove.current = 0;
+                    heroX.set((cx / window.innerWidth - 0.5) * 40);
+                    heroY.set((cy / window.innerHeight - 0.5) * 40);
+                    cursorX.set(cx - 260);
+                    cursorY.set(cy - 260);
+                });
+            };
+
+            useEffect(() => {
+                let last = false;
+                const handleScroll = () => {
+                    const v = window.scrollY > 20;
+                    if (v !== last) { last = v; setScrolled(v); }
+                };
+                window.addEventListener('scroll', handleScroll, { passive: true });
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            useEffect(() => {
+                const platform = navigator.userAgent.toLowerCase();
+                if (platform.includes('android')) setUserOS('Android');
+                else if (platform.includes('mac')) setUserOS('macOS');
+                else if (platform.includes('linux')) setUserOS('Linux');
+                else setUserOS('Windows');
+            }, []);
+
+            const getOSIcon = (os) => {
+                if (os === 'macOS') return 'fa-apple';
+                if (os === 'Android') return 'fa-android';
+                if (os === 'Linux') return 'fa-linux';
+                return 'fa-windows';
+            };
+
+            const faqItems = [
+                { q: t.faq_q1, a: t.faq_a1 },
+                { q: t.faq_q2, a: t.faq_a2 },
+                { q: t.faq_q3, a: t.faq_a3 },
+                { q: t.faq_q4, a: t.faq_a4 }
+            ];
+
+            const showCountdown = daysLeft >= 0 && daysLeft <= 60;
+
+            const unavailMsg = userOS === 'macOS' ? t.modal_mac_msg : t.modal_android_msg;
+
+            const openDownload = (os) => {
+                if (os) setUserOS(os);
+                setPremiumSoldOut(false);
+                setShowUnavailMsg(false);
+                setShowPricing(true);
+            };
+            const closeModal = () => { setShowPricing(false); setPremiumSoldOut(false); setShowUnavailMsg(false); };
+            const handleFreeDownload = (e) => {
+                if (isUnavailable) { e.preventDefault(); setPremiumSoldOut(false); setShowUnavailMsg(true); }
+            };
+            const handlePremiumClick = () => {
+                setShowUnavailMsg(false);
+                setPremiumSoldOut(false);
+                if (!authUser) {
+                    window.location.href = '/account.html?mode=signup';
+                    return;
+                }
+                setShowUnavailMsg(true);
+            };
+            useEffect(() => {
+                if (!showPricing) return;
+                const onKey = (e) => { if (e.key === 'Escape') closeModal(); };
+                window.addEventListener('keydown', onKey);
+                return () => window.removeEventListener('keydown', onKey);
+            }, [showPricing]);
+
+            return (
+                <div className="relative min-h-screen bg-mio-bg text-white overflow-hidden" onMouseMove={handleMouseMove}>
+                    {/* Фон: размытые цветные пятна */}
+                    <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
+                        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-mio-primary/20 rounded-full filter blur-[120px] animate-blob"></div>
+                        <div className="absolute top-[30%] right-[-10%] w-[400px] h-[400px] bg-mio-secondary/20 rounded-full filter blur-[120px] animate-blob" style={{ animationDelay: '-4s' }}></div>
+                        <div className="absolute bottom-[-10%] left-[30%] w-[600px] h-[600px] bg-mio-secondary/10 rounded-full filter blur-[120px] animate-blob" style={{ animationDelay: '-8s' }}></div>
+                    </div>
+                    <Embers theme={theme} />
+                    {!LITE && <motion.div className="cursor-glow hidden md:block" style={{ x: cursorXS, y: cursorYS }} />}
+                    {hw && (
+                        <>
+                            <div className="fog"></div>
+                            <div className="fog two"></div>
+                            <div className="vignette"></div>
+                            <Bats />
+                            <Cobweb className="fixed top-0 left-0 z-[4] pointer-events-none" style={{ width: 200, height: 200 }} />
+                            <Cobweb className="fixed top-0 right-0 z-[4] pointer-events-none hidden md:block" style={{ width: 160, height: 160, transform: 'scaleX(-1)' }} />
+                        </>
+                    )}
+
+                    {/* Навбар */}
+                    <motion.nav initial={{ y: -100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] md:max-w-[960px] py-2">
+                        <div className={`flex items-center justify-between px-4 sm:px-6 py-1 rounded-full border border-mio-border bg-mio-bg/70 backdrop-blur-xl transition-shadow duration-300 ${scrolled ? 'shadow-[0_8px_30px_rgb(0,0,0,0.5)]' : ''}`}>
+                            <div className="flex items-center gap-4 md:gap-8 whitespace-nowrap">
+                                <a href="#" className="text-base md:text-lg font-bold tracking-wider flex items-center gap-2">
+                                    <img src="Icon.png" alt="Mio Client" width="28" height="28" className="w-7 h-7 rounded-md" />
+                                    {hw && <span className="pumpkin-pulse text-base">🎃</span>}
+                                    <span><span className="text-white">Mio</span><span className="text-grad"> Client</span></span>
+                                </a>
+                                <div className="hidden md:flex items-center gap-4 lg:gap-5 text-xs md:text-sm font-medium text-gray-300">
+                                    <a href="#features" className="hover:text-white transition-colors">{t.nav_features}</a>
+                                    <a href="#performance" className="hover:text-white transition-colors">{t.nav_performance}</a>
+                                    <a href="#changelog" className="hover:text-white transition-colors">{t.nav_changelog}</a>
+                                    <a href="#faq" className="hover:text-white transition-colors">{t.nav_faq}</a>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 md:gap-4 whitespace-nowrap">
+                                <a href="https://t.me/ddnetsam" target="_blank" rel="noopener" aria-label="Telegram" className="text-gray-400 hover:text-white transition-colors text-lg"><i className="fa-brands fa-telegram"></i></a>
+                                <a href="https://discord.gg/CVydaKpS8H" target="_blank" rel="noopener" aria-label="Discord" className="text-gray-400 hover:text-white transition-colors text-lg"><i className="fa-brands fa-discord"></i></a>
+                                <a href="/account.html" aria-label="Account" title="Account" className="text-gray-300 hover:text-white transition-colors text-lg"><i className="fa-solid fa-user"></i></a>
+                            </div>
+                        </div>
+                    </motion.nav>
+
+                    {/* Переключатели языка и темы */}
+                    <motion.div
+                        initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                        className="fixed top-[84px] right-4 md:right-6 z-40 flex flex-col items-end gap-2"
+                    >
+                        <div className="flex items-center gap-1 bg-mio-card/90 border border-mio-border rounded-full p-1 shadow-[0_4px_20px_rgb(0,0,0,0.4)] backdrop-blur-sm">
+                            {['RU', 'EN'].map((l) => (
+                                <button key={l} onClick={() => setLang(l)} className={`lang-btn px-4 py-1 text-xs font-bold rounded-full ${lang === l ? 'bg-mio-primary text-white shadow-[0_0_15px_rgb(var(--p)/0.5)]' : 'text-gray-400 hover:text-white'}`}>{l}</button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setTheme(hw ? 'classic' : 'halloween')}
+                            className="lang-btn flex items-center gap-2 bg-mio-card/90 border border-mio-border rounded-full pl-3 pr-4 py-1.5 text-xs font-semibold text-gray-300 hover:text-white hover:border-mio-primary/60 backdrop-blur-sm shadow-[0_4px_20px_rgb(0,0,0,0.4)]"
+                            title={hw ? t.theme_c : t.theme_h}
+                        >
+                            <span className={hw ? 'pumpkin-pulse' : ''}>{hw ? '🎃' : '✨'}</span>
+                            {hw ? t.theme_c : t.theme_h}
+                        </button>
+                    </motion.div>
+
+                    {/* Hero */}
+                    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 z-10">
+                        {hw && (
+                            <div className="spider hidden sm:flex" style={{ left: '11%' }}>
+                                <div className="thread"></div>
+                                <i className="fa-solid fa-spider"></i>
+                            </div>
+                        )}
+                        <motion.div style={{ x: heroXSpring, y: heroYSpring }} className="absolute inset-0 z-[-1] flex items-center justify-center pointer-events-none">
+                            {hw ? (
+                                <>
+                                    <div className="moon absolute top-[17%] right-[10%] hidden md:block animate-float-slow"></div>
+                                    <i className="fa-solid fa-ghost absolute top-[34%] left-[17%] text-6xl text-white/10 animate-float-slow" style={{ filter: 'drop-shadow(0 0 20px rgb(var(--g) / .35))' }}></i>
+                                    <i className="fa-solid fa-skull absolute bottom-[22%] left-[10%] text-4xl text-white/5 animate-float-slow"></i>
+                                    <span className="pumpkin-glow absolute bottom-[20%] right-[12%] text-6xl md:text-7xl">🎃</span>
+                                    <span className="pumpkin-glow absolute bottom-[34%] right-[26%] text-3xl" style={{ animationDelay: '1.2s' }}>🎃</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="absolute top-[20%] left-[20%] w-32 h-32 border border-mio-primary/30 rounded-3xl rotate-12 backdrop-blur-sm animate-float-slow bg-mio-primary/5"></div>
+                                    <div className="absolute bottom-[25%] right-[15%] w-24 h-24 border border-mio-secondary/30 rounded-full backdrop-blur-sm animate-float-slow bg-mio-secondary/5"></div>
+                                    <div className="absolute top-[30%] right-[25%] w-16 h-16 border border-white/10 rotate-45 backdrop-blur-sm animate-float-slow"></div>
+                                </>
+                            )}
+                        </motion.div>
+
+                        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }} className="text-center max-w-4xl">
+                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-8 relative inline-block">
+                                <img src="Icon.png" alt="Mio Client Logo" width="112" height="112" className="w-28 h-28 rounded-2xl mx-auto border border-mio-border shadow-[0_0_60px_rgb(var(--p)/0.4)]" />
+                                {hw && <span className="pumpkin-glow absolute -top-5 -right-5 text-4xl" style={{ transform: 'rotate(14deg)' }}>🎃</span>}
+                            </motion.div>
+
+                            <div className="flex flex-col items-center gap-3 mb-8">
+                                <div className="inline-block px-4 py-1.5 rounded-full border border-mio-border bg-mio-card/60 backdrop-blur-sm text-xs font-medium text-gray-300 tracking-wide">
+                                    {hw ? t.hero_version_h : t.hero_version}
+                                </div>
+                                {hw && showCountdown && (
+                                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-mio-primary/40 bg-mio-primary/10 text-xs font-semibold text-mio-primary">
+                                        <i className="fa-solid fa-skull"></i>
+                                        {daysLeft === 0 ? t.countdown_today : t.countdown(daysLeft)}
+                                    </div>
+                                )}
+                            </div>
+
+                            <h1 className="font-spooky text-7xl md:text-9xl lg:text-[10rem] font-extrabold tracking-tighter mb-6 leading-none interactive-text">
+                                <span className="text-white">Mio</span>{" "}
+                                <span className={`text-grad ${hw ? 'flicker' : ''}`}>Client</span>
+                            </h1>
+                            <h2 className="text-2xl md:text-3xl font-light text-gray-300 mb-4 tracking-tight interactive-text">{t.hero_subtitle}</h2>
+                            <p className="text-gray-500 max-w-xl mx-auto mb-10 font-light text-lg">{t.hero_desc}</p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <a href="#download" className="glow-primary relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-mio-primary to-mio-secondary text-white font-semibold hover:scale-105"><i className="fa-solid fa-download"></i> {t.btn_download}</a>
+                                <a href="https://dalink.to/samporter" target="_blank" rel="noopener" className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-mio-card/60 border border-mio-border backdrop-blur-sm text-white font-semibold transition-all duration-300 hover:scale-105 hover:border-white/30"><i className="fa-solid fa-heart text-mio-secondary"></i> {t.btn_support}</a>
+                            </div>
+                        </motion.div>
+                    </section>
+
+                    {/* Features */}
+                    <section id="features" className="cv relative py-32 px-6 z-10">
+                        <div className="max-w-7xl mx-auto" style={{ perspective: 1200 }}>
+                            <SectionHead tag={t.features_tag} title={t.features_title} halloween={hw} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {t.feat.map((feature, i) => (<FeatureCard key={i} {...feature} index={i} halloween={hw} />))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Gallery */}
+                    <section id="gallery" className="cv relative py-32 z-10">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <SectionHead tag={t.gallery_tag} title={t.gallery_title} halloween={hw} />
+                        </div>
+                        <div className="gallery-scroll flex gap-6 overflow-x-auto px-6 pb-6 snap-x snap-mandatory">
+                            {[1, 2, 3, 4, 5].map((item) => <GalleryItem key={item} item={item} />)}
+                        </div>
+                    </section>
+
+                    {/* Performance */}
+                    <section id="performance" className="cv relative py-32 px-6 z-10">
+                        <div className="max-w-6xl mx-auto">
+                            <SectionHead tag={t.perf_tag} title={t.perf_title} desc={t.perf_desc} halloween={hw} />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {[
+                                    { value: 360, suffix: '+', label: t.stat1_label, desc: t.stat1_desc, icon: 'fa-bolt' },
+                                    { value: 2, suffix: '', label: t.stat2_label, desc: t.stat2_desc, icon: 'fa-desktop' },
+                                    { value: 0.8, suffix: 's', label: t.stat3_label, desc: t.stat3_desc, decimals: 1, icon: 'fa-hourglass-half' }
+                                ].map((stat, i) => (
+                                    <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: i * 0.15 }} className="relative p-10 rounded-2xl border border-mio-border bg-mio-card/70 backdrop-blur-sm text-center overflow-hidden">
+                                        <div className="absolute -top-20 -left-20 w-40 h-40 bg-mio-primary/25 rounded-full filter blur-3xl"></div>
+                                        <i className={`fa-solid ${stat.icon} absolute top-5 right-5 text-mio-primary/30 text-xl`}></i>
+                                        <div className="relative z-10">
+                                            <h3 className="text-5xl md:text-6xl font-extrabold mb-2 tracking-tighter bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent"><Counter value={stat.value} suffix={stat.suffix} decimals={stat.decimals || 0} /></h3>
+                                            <p className="text-xl font-medium text-white mb-1">{stat.label}</p>
+                                            <p className="text-gray-500 font-light">{stat.desc}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Changelog */}
+                    <section id="changelog" className="cv relative py-32 px-6 z-10">
+                        <div className="max-w-3xl mx-auto">
+                            <SectionHead tag={t.changelog_tag} title={t.changelog_title} desc={t.changelog_desc} halloween={hw} />
+                            <div className="relative">
+                                <div className="cl-line"></div>
+                                {t.changelog.map((entry, i) => (
+                                    <ChangelogEntry key={entry.v} entry={entry} t={t} index={i} />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Team */}
+                    <section id="team" className="cv relative py-32 px-6 z-10">
+                        <div className="max-w-4xl mx-auto">
+                            <SectionHead tag={t.team_tag} title={t.team_title} desc={t.team_desc} halloween={hw} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {t.team.map((m, i) => (<TeamCard key={m.name} member={m} index={i} />))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* FAQ */}
+                    <section id="faq" className="cv relative py-32 px-6 z-10">
+                        <div className="max-w-3xl mx-auto">
+                            <SectionHead tag={t.faq_tag} title={t.faq_title} halloween={hw} />
+                            <div className="flex flex-col gap-3">
+                                {faqItems.map((item, i) => (
+                                    <FaqItem key={i} question={item.q} answer={item.a} index={i} activeIndex={activeFaq} setActiveIndex={setActiveFaq} halloween={hw} />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Download */}
+                    <section id="download" className="relative py-32 px-6 z-10 flex flex-col items-center justify-center text-center">
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-mio-primary to-mio-secondary blur-3xl opacity-25 rounded-full"></div>
+                            <div className="relative z-10">
+                                {hw && <div className="mb-4 text-6xl"><span className="pumpkin-glow">🎃</span></div>}
+                                <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 interactive-text">{t.download_title}</h2>
+                                <p className="text-gray-500 max-w-xl mx-auto mb-10 font-light text-lg">{hw ? t.download_desc_h : t.download_desc}</p>
+
+                                <button onClick={() => openDownload()} className="glow-primary-lg relative inline-flex items-center justify-center gap-4 px-12 py-6 rounded-2xl bg-gradient-to-r from-mio-primary to-mio-secondary text-white font-bold text-xl mb-8 hover:scale-105">
+                                    <i className={`fa-brands ${getOSIcon(userOS)}`}></i> {t.download_for} {userOS}
+                                </button>
+
+                                <div className="flex flex-col items-center gap-3 text-gray-400">
+                                    <p className="text-sm text-gray-500">{t.download_wrong}</p>
+                                    <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-lg font-medium">
+                                        {[['Windows', 'fa-windows'], ['macOS', 'fa-apple'], ['Linux', 'fa-linux'], ['Android', 'fa-android']].map(([os, ic]) => (
+                                            <button key={os} onClick={() => openDownload(os)} className={`platform-link ${userOS === os ? 'active' : ''}`}><i className={`fa-brands ${ic}`}></i> {os}</button>
+                                        ))}
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-4">{t.download_latest}</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </section>
+
+                    {/* Footer */}
+                    <div className="relative z-10 -mb-px">
+                        {hw && <Graveyard />}
+                    </div>
+                    <footer className="relative py-12 px-6 border-t border-mio-border z-10 bg-mio-card/80 backdrop-blur-sm">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="text-lg font-bold tracking-wider flex items-center gap-2">
+                                <img src="Icon.png" alt="Mio Client" width="28" height="28" loading="lazy" className="w-7 h-7 rounded-md" />
+                                {hw && <span className="pumpkin-pulse">🎃</span>}
+                                <span><span className="text-white">Mio</span><span className="text-grad"> Client</span></span>
+                            </div>
+                            <div className="flex items-center gap-8 text-2xl text-gray-400">
+                                <a href="https://t.me/ddnetsam" target="_blank" rel="noopener" aria-label="Telegram" className="hover:text-mio-primary transition-colors"><i className="fa-brands fa-telegram"></i></a>
+                                <a href="https://discord.gg/CVydaKpS8H" target="_blank" rel="noopener" aria-label="Discord" className="hover:text-mio-primary transition-colors"><i className="fa-brands fa-discord"></i></a>
+                                <a href="https://dalink.to/samporter" target="_blank" rel="noopener" aria-label="Support" className="hover:text-mio-secondary transition-colors"><i className="fa-solid fa-heart"></i></a>
+                            </div>
+                            <div className="text-center md:text-right">
+                                <p className="text-sm text-gray-500">{t.footer_copy}</p>
+                                {hw && <p className="text-xs text-mio-primary/80 mt-1">{t.footer_h}</p>}
+                            </div>
+                        </div>
+                    </footer>
+
+                    <AnimatePresence>
+                        {authOpen && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setAuthOpen(false)} className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+                                <motion.div initial={{ scale: 0.96, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.96, opacity: 0, y: 16 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-3xl border border-mio-border bg-mio-card p-7 md:p-9 shadow-[0_20px_70px_rgba(0,0,0,.7)]">
+                                    <button onClick={() => setAuthOpen(false)} aria-label="Close" className="absolute right-5 top-5 text-gray-500 hover:text-white"><i className="fa-solid fa-xmark text-lg"></i></button>
+                                    <div className="text-center mb-7">
+                                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-mio-primary/30 bg-mio-primary/10 text-mio-primary text-2xl"><i className={`fa-solid ${authUser ? 'fa-user-astronaut' : 'fa-user-lock'}`}></i></div>
+                                        <h2 className="text-2xl font-extrabold tracking-tight">{authUser ? 'Мой аккаунт' : authMode === 'signup' ? 'Создать аккаунт' : authMode === 'forgot' ? 'Сброс пароля' : authMode === 'update' ? 'Новый пароль' : 'Вход в Mio Client'}</h2>
+                                        <p className="text-sm text-gray-400 mt-2">{authUser ? authUser.email : 'Аккаунт Mio Client'}</p>
+                                    </div>
+                                    {authUser ? (
+                                        <div className="space-y-5">
+                                            <div className="rounded-2xl border border-mio-border bg-black/20 p-5">
+                                                <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">Текущий тариф</p>
+                                                <p className={`text-xl font-bold ${authProfile?.is_premium ? 'text-mio-primary' : 'text-gray-200'}`}><i className={`fa-solid ${authProfile?.is_premium ? 'fa-crown' : 'fa-seedling'} mr-2`}></i>{authProfile?.is_premium ? 'Premium активен' : 'Free'}</p>
+                                                <p className="text-sm text-gray-400 mt-2">{authProfile?.is_premium ? 'Premium привязан к этому аккаунту.' : 'После покупки Premium он должен быть активирован администратором.'}</p>
+                                            </div>
+                                            {!authProfile && <p className="text-xs text-gray-500">Если статус не загрузился, сначала выполни SQL-настройку из файла-инструкции.</p>}
+                                            <button onClick={signOut} className="w-full rounded-xl border border-mio-border px-5 py-3 text-sm font-semibold text-gray-200 hover:bg-white/5">Выйти из аккаунта</button>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={submitAuth} className="space-y-4">
+                                            <label className="block">
+                                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-400">Email</span>
+                                                <input type="email" required autoComplete="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border border-mio-border bg-black/25 px-4 py-3 text-white outline-none focus:border-mio-primary" />
+                                            </label>
+                                            {authMode !== 'forgot' && <label className="block">
+                                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-400">Пароль</span>
+                                                <input type="password" required minLength={authMode === 'signup' || authMode === 'update' ? 8 : 1} autoComplete={authMode === 'signup' || authMode === 'update' ? 'new-password' : 'current-password'} value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder={authMode === 'signup' || authMode === 'update' ? 'Минимум 8 символов' : 'Твой пароль'} className="w-full rounded-xl border border-mio-border bg-black/25 px-4 py-3 text-white outline-none focus:border-mio-primary" />
+                                            </label>}
+                                            <button type="submit" disabled={authBusy} className="btn-premium w-full rounded-xl px-5 py-3 font-semibold disabled:opacity-60">{authBusy ? 'Подожди…' : authMode === 'signup' ? 'Зарегистрироваться' : authMode === 'forgot' ? 'Отправить письмо' : authMode === 'update' ? 'Сохранить новый пароль' : 'Войти'}</button>
+                                            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-gray-400">
+                                                {authMode !== 'login' && <button type="button" onClick={() => { setAuthMode('login'); setAuthMessage(''); }} className="hover:text-white">Уже есть аккаунт? Войти</button>}
+                                                {authMode === 'login' && <button type="button" onClick={() => { setAuthMode('signup'); setAuthMessage(''); }} className="hover:text-white">Создать аккаунт</button>}
+                                                {authMode === 'login' && <button type="button" onClick={() => { setAuthMode('forgot'); setAuthMessage(''); }} className="hover:text-white">Забыл пароль</button>}
+                                                {authMode === 'signup' && <button type="button" onClick={() => { setAuthMode('login'); setAuthMessage(''); }} className="hover:text-white">Уже зарегистрирован</button>}
+                                            </div>
+                                        </form>
+                                    )}
+                                    {authMessage && <p role="status" className="mt-5 rounded-xl border border-mio-primary/20 bg-mio-primary/10 px-4 py-3 text-sm leading-relaxed text-gray-200">{authMessage}</p>}
+                                    <p className="mt-6 text-center text-[11px] leading-relaxed text-gray-500">Не используй пароль от других сервисов. Статус Premium управляется защищённой базой данных.</p>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {showPricing && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={closeModal} className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+                                <motion.div
+                                    initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="relative glass-lite rounded-3xl p-8 md:p-12 max-w-4xl w-full flex flex-col gap-8 shadow-[0_20px_60px_rgba(0,0,0,0.8)] bg-mio-card my-auto"
+                                >
+                                    <button onClick={closeModal} aria-label="Close" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors z-10"><i className="fa-solid fa-xmark text-lg"></i></button>
+
+                                    <div className="flex flex-col md:flex-row gap-6">
+                                        <div className="flex-1 glass-lite rounded-2xl p-8 flex flex-col items-center text-center">
+                                            <i className={`fa-solid ${hw ? 'fa-ghost' : 'fa-seedling'} text-mio-primary text-2xl mb-6`}></i>
+                                            <h3 className="text-xl font-bold mb-2 tracking-tight">{t.modal_free_title}</h3>
+                                            <p className="text-3xl font-extrabold mb-8 text-gray-300 tracking-tight">{t.modal_free_price}</p>
+                                            <div className="flex flex-col gap-3 text-gray-400 text-left w-full mb-8 flex-1">
+                                                {[t.modal_free_f1, t.modal_free_f2, t.modal_free_f3].map((f, i) => (
+                                                    <p key={i} className="flex items-center gap-3 text-sm"><i className="fa-solid fa-check text-mio-primary text-xs"></i> {f}</p>
+                                                ))}
+                                            </div>
+                                            <a href={getDownloadUrl(userOS)} onClick={handleFreeDownload} className="w-full glass-lite glass-hover inline-flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-white font-semibold text-sm">
+                                                <i className={`fa-brands ${getOSIcon(userOS)} text-xs`}></i> {t.modal_free_btn} {userOS}
+                                            </a>
+                                        </div>
+
+                                        {/* Premium: градиент прямо на карточке (без -z-10 слоя), isolate — фикс затемнения при hover */}
+                                        <div className="flex-1 relative isolate rounded-2xl p-8 flex flex-col items-center text-center border border-mio-primary/40 shadow-[0_0_40px_rgb(var(--p)/0.15)] overflow-hidden bg-gradient-to-b from-mio-primary/10 to-transparent">
+                                            <div className="absolute top-0 right-0 bg-mio-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl tracking-wider">PRO</div>
+                                            <i className={`fa-solid ${hw ? 'fa-skull' : 'fa-crown'} text-mio-secondary text-2xl mb-6`}></i>
+                                            <h3 className="text-xl font-bold mb-2 tracking-tight text-grad">{t.modal_premium_title}</h3>
+                                            <p className="text-3xl font-extrabold mb-8 text-white tracking-tight">{t.modal_premium_price}<span className="text-sm font-light text-gray-500">{t.modal_premium_sub}</span></p>
+                                            <div className="flex flex-col gap-3 text-gray-300 text-left w-full mb-8 flex-1">
+                                                {[t.modal_premium_f1, t.modal_premium_f2, t.modal_premium_f3, t.modal_premium_f4].map((f, i) => (
+                                                    <p key={i} className="flex items-center gap-3 text-sm"><i className="fa-solid fa-check text-mio-secondary text-xs"></i> {f}</p>
+                                                ))}
+                                            </div>
+                                            <button onClick={handlePremiumClick} className="btn-premium relative z-10 w-full inline-flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-white font-semibold text-sm">
+                                                <i className="fa-solid fa-bolt text-xs"></i> {t.modal_premium_btn}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {(premiumSoldOut || showUnavailMsg) && (
+                                            <motion.div key="msg" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden w-full">
+                                                <p className="text-mio-primary text-sm text-center font-medium tracking-wide">{showUnavailMsg ? (authUser ? (authProfile?.is_premium ? 'Premium уже активен на этом аккаунте.' : 'Регистрация доступна, но покупка и автоматическая активация Premium пока не подключены.') : unavailMsg) : t.modal_premium_out}</p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
